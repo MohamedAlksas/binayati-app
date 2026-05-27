@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../services/unit_service.dart';
+import '../../services/payment_service.dart';
 import '../../services/contract_service.dart';
 import '../../theme/app_theme.dart';
 import '../widgets/stat_card.dart';
@@ -203,7 +204,7 @@ class _UnitDetailScreenState extends ConsumerState<UnitDetailScreen> {
               onPressed: () async {
                 if (amountCtl.text.isEmpty) return;
                 try {
-                  await ContractService().createPayment({
+                  await PaymentService().createPayment({
                     'contractId': _detail!['activeContract']['id'],
                     'amount': double.parse(amountCtl.text),
                     'paidDate': DateTime.now().toIso8601String(),

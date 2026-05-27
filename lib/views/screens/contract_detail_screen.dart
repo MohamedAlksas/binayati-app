@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../providers/contract_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../services/payment_service.dart';
+import '../../services/contract_service.dart';
 
 class ContractDetailScreen extends ConsumerWidget {
   final int contractId;

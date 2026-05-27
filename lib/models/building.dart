@@ -1,3 +1,5 @@
+import 'contract.dart';
+
 class Building {
   final int id;
   final String name;

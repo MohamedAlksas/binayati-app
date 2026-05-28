@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
-import 'api_client.dart';
 
 class VersionInfo {
   final String latestVersion;
@@ -14,23 +13,34 @@ class VersionInfo {
     required this.downloadUrl,
     required this.forceUpdate,
   });
-
-  factory VersionInfo.fromJson(Map<String, dynamic> json) {
-    return VersionInfo(
-      latestVersion: json['latestVersion'] as String,
-      downloadUrl: json['downloadUrl'] as String,
-      forceUpdate: json['forceUpdate'] as bool,
-    );
-  }
 }
 
 class UpdateService {
-  final ApiClient _api = ApiClient();
+  final Dio _dio = Dio();
 
   Future<VersionInfo?> checkForUpdate() async {
     try {
-      final response = await _api.get('/app/version');
-      return VersionInfo.fromJson(response.data as Map<String, dynamic>);
+      final response = await _dio.get(
+        'https://api.github.com/repos/MohamedAlksas/binayati-app/releases/latest',
+        options: Options(headers: {'Accept': 'application/vnd.github.v3+json'}),
+      );
+      final data = response.data as Map<String, dynamic>;
+      final tag = data['tag_name'] as String;
+      final latestVersion = tag.startsWith('v') ? tag.substring(1) : tag;
+      final assets = data['assets'] as List;
+      String? downloadUrl;
+      for (final asset in assets) {
+        if ((asset['name'] as String).endsWith('.apk')) {
+          downloadUrl = asset['browser_download_url'] as String;
+          break;
+        }
+      }
+      if (downloadUrl == null) return null;
+      return VersionInfo(
+        latestVersion: latestVersion,
+        downloadUrl: downloadUrl,
+        forceUpdate: false,
+      );
     } catch (_) {
       return null;
     }

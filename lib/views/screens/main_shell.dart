@@ -5,7 +5,6 @@ import 'building_view_screen.dart';
 import 'contracts_screen.dart';
 import 'tenants_screen.dart';
 import 'more_screen.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/update_provider.dart';
 

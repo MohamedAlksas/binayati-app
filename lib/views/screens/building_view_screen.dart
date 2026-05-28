@@ -24,7 +24,7 @@ class BuildingViewScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () async => ref.refresh(buildingProvider),
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               itemCount: building.floors.length,
               itemBuilder: (context, index) {
                 final floor = building.floors.reversed.toList()[index];
@@ -40,15 +40,16 @@ class BuildingViewScreen extends ConsumerWidget {
 
 class _FloorCard extends StatelessWidget {
   final dynamic floor;
-
   const _FloorCard({required this.floor});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -57,19 +58,19 @@ class _FloorCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     floor.label.isNotEmpty ? floor.label : 'الطابق ${floor.floorNumber}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                    style: theme.textTheme.titleMedium?.copyWith(color: AppTheme.primaryColor),
                   ),
                 ),
                 const Spacer(),
-                Text('${floor.units.length} وحدة', style: TextStyle(color: Colors.grey.shade600)),
+                Text('${floor.units.length} وحدة', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600)),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -79,16 +80,16 @@ class _FloorCard extends StatelessWidget {
                 String label;
 
                 if (unit.isOwnerUnit) {
-                  bgColor = AppTheme.primaryColor.withOpacity(0.15);
-                  icon = Icons.home;
+                  bgColor = AppTheme.primaryColor.withValues(alpha: 0.1);
+                  icon = Icons.home_rounded;
                   label = '${unit.unitNumber}\n(سكنك)';
                 } else if (unit.isOccupied) {
-                  bgColor = AppTheme.accentColor.withOpacity(0.15);
-                  icon = Icons.check_circle;
+                  bgColor = AppTheme.accentColor.withValues(alpha: 0.1);
+                  icon = Icons.check_circle_rounded;
                   label = unit.unitNumber;
                 } else {
-                  bgColor = AppTheme.errorColor.withOpacity(0.1);
-                  icon = Icons.cancel;
+                  bgColor = AppTheme.errorColor.withValues(alpha: 0.08);
+                  icon = Icons.cancel_rounded;
                   label = unit.unitNumber;
                 }
 
@@ -103,7 +104,7 @@ class _FloorCard extends StatelessWidget {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: bgColor,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: unit.isOwnerUnit ? AppTheme.primaryColor : Colors.transparent,
                         width: 2,
@@ -111,14 +112,14 @@ class _FloorCard extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        Icon(icon, color: unit.isOwnerUnit
+                        Icon(icon, size: 24, color: unit.isOwnerUnit
                             ? AppTheme.primaryColor
                             : unit.isOccupied
                                 ? AppTheme.accentColor
                                 : AppTheme.errorColor),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(label, textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),

@@ -12,6 +12,7 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardAsync = ref.watch(dashboardProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('بنايتي')),
@@ -24,124 +25,180 @@ class DashboardScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () async => ref.refresh(dashboardProvider),
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
-                Text('ملخص سريع', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 12),
+                Text('ملخص سريع', style: theme.textTheme.titleLarge),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                       child: StatCard(
                         title: 'الدخل الشهري',
                         value: '${currency.format(dash.totalMonthlyIncome)} ج.م',
-                        icon: Icons.monetization_on,
+                        icon: Icons.trending_up_rounded,
                         color: AppTheme.accentColor,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: StatCard(
                         title: 'العقود النشطة',
                         value: '${dash.activeContracts}',
-                        icon: Icons.description,
-                        color: AppTheme.primaryColor,
+                        icon: Icons.description_rounded,
+                        color: AppTheme.ctaColor,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
                       child: StatCard(
                         title: 'الوحدات الفارغة',
                         value: '${dash.vacantUnits}',
-                        icon: Icons.room,
+                        icon: Icons.meeting_room_rounded,
                         color: AppTheme.warningColor,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: StatCard(
                         title: 'إجمالي التأمين',
                         value: '${currency.format(dash.totalSecurityDeposits)} ج.م',
-                        icon: Icons.security,
-                        color: AppTheme.secondaryColor,
+                        icon: Icons.verified_user_rounded,
+                        color: AppTheme.primaryColor,
                       ),
                     ),
                   ],
                 ),
                 if (dash.expiringSoon.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  Text('عقود تنتهي قريبًا', style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 32),
+                  Text('عقود تنتهي قريبًا', style: theme.textTheme.titleLarge),
+                  const SizedBox(height: 12),
                   ...dash.expiringSoon.map((c) => Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.warning_amber, color: AppTheme.warningColor),
-                      title: Text(c.tenantName),
-                      subtitle: Text('الوحدة ${c.unitNumber} - ${c.daysUntilExpiry} يوم متبقي'),
-                      trailing: Text('${currency.format(c.rentAmount)} ج.م'),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppTheme.warningColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.warning_amber_rounded, color: AppTheme.warningColor, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(c.tenantName, style: theme.textTheme.titleMedium),
+                                const SizedBox(height: 2),
+                                Text('الوحدة ${c.unitNumber} - ${c.daysUntilExpiry} يوم متبقي',
+                                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600)),
+                              ],
+                            ),
+                          ),
+                          Text('${currency.format(c.rentAmount)} ج.م',
+                              style: theme.textTheme.titleMedium?.copyWith(color: AppTheme.primaryColor)),
+                        ],
+                      ),
                     ),
                   )),
                 ],
-                const SizedBox(height: 24),
-                Text('الدخل الشهري (آخر ١٢ شهر)', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 32),
+                Text('الدخل الشهري (آخر ١٢ شهر)', style: theme.textTheme.titleLarge),
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 200,
-                  child: BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: dash.monthlyIncome.isEmpty
-                          ? 100
-                          : dash.monthlyIncome.map((m) => m.total).reduce((a, b) => a > b ? a : b) * 1.2,
-                      barGroups: dash.monthlyIncome.asMap().entries.map((entry) {
-                        return BarChartGroupData(x: entry.key, barRods: [
-                          BarChartRodData(
-                            toY: entry.value.total,
-                            color: AppTheme.primaryColor,
-                            width: 16,
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: SizedBox(
+                      height: 200,
+                      child: BarChart(
+                        BarChartData(
+                          alignment: BarChartAlignment.spaceAround,
+                          maxY: dash.monthlyIncome.isEmpty
+                              ? 100
+                              : dash.monthlyIncome.map((m) => m.total).reduce((a, b) => a > b ? a : b) * 1.2,
+                          barGroups: dash.monthlyIncome.asMap().entries.map((entry) {
+                            return BarChartGroupData(x: entry.key, barRods: [
+                              BarChartRodData(
+                                toY: entry.value.total,
+                                color: AppTheme.primaryColor,
+                                width: 16,
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                              ),
+                            ]);
+                          }).toList(),
+                          titlesData: FlTitlesData(
+                            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  if (value >= 0 && value < dash.monthlyIncome.length) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Text(dash.monthlyIncome[value.toInt()].month,
+                                          style: const TextStyle(fontSize: 10, color: AppTheme.textColor)),
+                                    );
+                                  }
+                                  return const Text('');
+                                },
+                              ),
+                            ),
                           ),
-                        ]);
-                      }).toList(),
-                      titlesData: FlTitlesData(
-                        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              if (value >= 0 && value < dash.monthlyIncome.length) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text(dash.monthlyIncome[value.toInt()].month,
-                                      style: const TextStyle(fontSize: 10)),
-                                );
-                              }
-                              return const Text('');
-                            },
-                          ),
+                          gridData: const FlGridData(show: false),
+                          borderData: FlBorderData(show: false),
                         ),
                       ),
-                      gridData: const FlGridData(show: false),
-                      borderData: FlBorderData(show: false),
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Text('آخر الدفعات', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
+                const SizedBox(height: 32),
+                Text('آخر الدفعات', style: theme.textTheme.titleLarge),
+                const SizedBox(height: 12),
                 ...dash.recentPayments.map((p) => Card(
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: AppTheme.accentColor.withOpacity(0.2),
-                      child: const Icon(Icons.check, color: AppTheme.accentColor),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.check_circle_rounded, color: AppTheme.accentColor, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(p.tenantName, style: theme.textTheme.titleMedium),
+                              const SizedBox(height: 2),
+                              Text('الوحدة ${p.unitNumber}',
+                                  style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600)),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text('${currency.format(p.amount)} ج.م',
+                                style: theme.textTheme.titleMedium?.copyWith(color: AppTheme.primaryColor)),
+                            const SizedBox(height: 2),
+                            Text(DateFormat('yyyy/MM/dd', 'ar').format(p.paidDate),
+                                style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500)),
+                          ],
+                        ),
+                      ],
                     ),
-                    title: Text(p.tenantName),
-                    subtitle: Text('الوحدة ${p.unitNumber} - ${DateFormat('yyyy/MM/dd', 'ar').format(p.paidDate)}'),
-                    trailing: Text('${currency.format(p.amount)} ج.م'),
                   ),
                 )),
               ],

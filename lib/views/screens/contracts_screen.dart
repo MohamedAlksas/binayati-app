@@ -6,7 +6,6 @@ import '../../theme/app_theme.dart';
 import '../../services/contract_service.dart';
 import '../../services/tenant_service.dart';
 import '../../services/unit_service.dart';
-import '../../models/contract.dart';
 import 'contract_detail_screen.dart';
 
 class ContractsListScreen extends ConsumerStatefulWidget {
@@ -23,13 +22,14 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
   Widget build(BuildContext context) {
     final contractsAsync = ref.watch(contractsProvider);
     final currency = NumberFormat('#,##0', 'ar_EG');
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('العقود'),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.filter_list_rounded),
             onSelected: (v) {
               setState(() => _filter = v);
               ref.refresh(contractsProvider);
@@ -44,7 +44,7 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddContract(context),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add_rounded),
       ),
       body: contractsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -59,9 +59,9 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.description, size: 64, color: Colors.grey.shade400),
+                  Icon(Icons.description_rounded, size: 64, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
-                  Text('لا توجد عقود', style: TextStyle(color: Colors.grey.shade600)),
+                  Text('لا توجد عقود', style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey.shade500)),
                 ],
               ),
             );
@@ -70,7 +70,7 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
           return RefreshIndicator(
             onRefresh: () async => ref.refresh(contractsProvider),
             child: ListView.builder(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
               itemCount: filtered.length,
               itemBuilder: (context, index) {
                 final c = filtered[index];
@@ -79,7 +79,7 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
 
                 return Card(
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(
                         builder: (_) => ContractDetailScreen(contractId: c.id),
@@ -92,13 +92,18 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
                         children: [
                           Row(
                             children: [
-                              CircleAvatar(
-                                backgroundColor: c.status == 'Active'
-                                    ? AppTheme.accentColor.withOpacity(0.2)
-                                    : Colors.grey.shade200,
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: c.status == 'Active'
+                                      ? AppTheme.accentColor.withValues(alpha: 0.1)
+                                      : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                                 child: Icon(
-                                  Icons.person,
+                                  Icons.person_rounded,
                                   color: c.status == 'Active' ? AppTheme.accentColor : Colors.grey,
+                                  size: 20,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -106,10 +111,9 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(c.tenantName,
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    Text(c.tenantName, style: theme.textTheme.titleMedium),
                                     Text('الوحدة ${c.unitNumber}',
-                                        style: TextStyle(color: Colors.grey.shade600)),
+                                        style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600)),
                                   ],
                                 ),
                               ),
@@ -117,17 +121,17 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text('${currency.format(c.rentAmount)} ج.م',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+                                      style: theme.textTheme.titleMedium?.copyWith(color: AppTheme.primaryColor)),
+                                  const SizedBox(height: 4),
                                   Container(
-                                    margin: const EdgeInsets.only(top: 4),
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: isExpiring
-                                          ? AppTheme.warningColor.withOpacity(0.2)
+                                          ? AppTheme.warningColor.withValues(alpha: 0.15)
                                           : c.status == 'Active'
-                                              ? AppTheme.accentColor.withOpacity(0.2)
-                                              : Colors.grey.shade200,
-                                      borderRadius: BorderRadius.circular(12),
+                                              ? AppTheme.accentColor.withValues(alpha: 0.15)
+                                              : Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
                                       c.status == 'Active'
@@ -135,6 +139,7 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
                                           : 'منتهي',
                                       style: TextStyle(
                                         fontSize: 11,
+                                        fontWeight: FontWeight.w600,
                                         color: isExpiring
                                             ? AppTheme.warningColor
                                             : c.status == 'Active'
@@ -150,10 +155,12 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              Icon(Icons.date_range, size: 14, color: Colors.grey.shade500),
-                              const SizedBox(width: 4),
-                              Text('${DateFormat('yyyy/MM/dd', 'ar').format(c.startDate)} - ${DateFormat('yyyy/MM/dd', 'ar').format(c.endDate)}',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                              Icon(Icons.date_range_rounded, size: 14, color: Colors.grey.shade400),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${DateFormat('yyyy/MM/dd', 'ar').format(c.startDate)} - ${DateFormat('yyyy/MM/dd', 'ar').format(c.endDate)}',
+                                style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade500),
+                              ),
                             ],
                           ),
                         ],
@@ -195,8 +202,8 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('عقد جديد', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
+              Text('عقد جديد', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 20),
               DropdownButtonFormField<int>(
                 decoration: const InputDecoration(labelText: 'الوحدة'),
                 items: units.where((u) => !u.isOccupied && !u.isOwnerUnit).map((u) => DropdownMenuItem(
@@ -227,27 +234,32 @@ class _ContractsListScreenState extends ConsumerState<ContractsListScreen> {
               const SizedBox(height: 12),
               TextField(controller: depositCtl, decoration: const InputDecoration(labelText: 'التأمين'),
                   keyboardType: TextInputType.number, textAlign: TextAlign.right),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () async {
-                  if (selectedUnitId == null || selectedTenantId == null) return;
-                  try {
-                    await ContractService().createContract({
-                      'unitId': selectedUnitId,
-                      'tenantId': selectedTenantId,
-                      'startDate': startCtl.text,
-                      'endDate': endCtl.text,
-                      'rentAmount': double.parse(rentCtl.text),
-                      'annualIncreasePercent': double.parse(increaseCtl.text),
-                      'securityDeposit': double.parse(depositCtl.text.isEmpty ? '0' : depositCtl.text),
-                    });
-                    Navigator.pop(ctx);
-                    ref.refresh(contractsProvider);
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-                  }
-                },
-                child: const Text('إنشاء العقد'),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (selectedUnitId == null || selectedTenantId == null) return;
+                    try {
+                      await ContractService().createContract({
+                        'unitId': selectedUnitId,
+                        'tenantId': selectedTenantId,
+                        'startDate': startCtl.text,
+                        'endDate': endCtl.text,
+                        'rentAmount': double.parse(rentCtl.text),
+                        'annualIncreasePercent': double.parse(increaseCtl.text),
+                        'securityDeposit': double.parse(depositCtl.text.isEmpty ? '0' : depositCtl.text),
+                      });
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      ref.refresh(contractsProvider);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+                      }
+                    }
+                  },
+                  child: const Text('إنشاء العقد'),
+                ),
               ),
               const SizedBox(height: 24),
             ],

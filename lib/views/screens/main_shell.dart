@@ -7,6 +7,7 @@ import 'tenants_screen.dart';
 import 'more_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
+import '../../providers/update_provider.dart';
 
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
@@ -17,6 +18,8 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
+  bool _checkedUpdate = false;
+  bool _dialogShown = false;
 
   final _screens = const [
     DashboardScreen(),
@@ -27,7 +30,26 @@ class _MainShellState extends ConsumerState<MainShell> {
   ];
 
   @override
+  void dispose() {
+    _checkedUpdate = false;
+    _dialogShown = false;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final updateState = ref.watch(updateProvider);
+
+    if (!_checkedUpdate) {
+      _checkedUpdate = true;
+      Future.microtask(() => ref.read(updateProvider.notifier).checkForUpdate());
+    }
+
+    if (updateState.versionInfo != null && !_dialogShown && !updateState.downloading) {
+      _dialogShown = true;
+      Future.microtask(() => _showUpdateDialog(context, updateState.versionInfo!.forceUpdate));
+    }
+
     final unreadAsync = ref.watch(unreadCountProvider);
 
     return Scaffold(
@@ -51,5 +73,40 @@ class _MainShellState extends ConsumerState<MainShell> {
         ],
       ),
     );
+  }
+
+  void _showUpdateDialog(BuildContext context, bool forceUpdate) {
+    showDialog(
+      context: context,
+      barrierDismissible: !forceUpdate,
+      builder: (ctx) => PopScope(
+        canPop: !forceUpdate,
+        child: AlertDialog(
+          title: const Text('تحديث متوفر'),
+          content: Text(forceUpdate
+              ? 'يرجى تحديث التطبيق إلى أحدث إصدار للمتابعة'
+              : 'يتوفر إصدار جديد من التطبيق. هل ترغب في التحديث الآن؟'),
+          actions: [
+            if (!forceUpdate)
+              TextButton(
+                onPressed: () {
+                  ref.read(updateProvider.notifier).dismiss();
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text('لاحقاً'),
+              ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                ref.read(updateProvider.notifier).downloadAndInstall();
+              },
+              child: const Text('تحديث الآن'),
+            ),
+          ],
+        ),
+      ),
+    ).then((_) {
+      if (forceUpdate) _dialogShown = false;
+    });
   }
 }
